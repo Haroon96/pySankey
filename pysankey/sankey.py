@@ -1,26 +1,23 @@
 # -*- coding: utf-8 -*-
-"""
-Produces simple Sankey Diagrams with matplotlib.
-@author: Anneya Golob & marcomanz & pierre-sassoulas & jorwoods
-                      .-.
-                 .--.(   ).--.
-      <-.  .-.-.(.->          )_  .--.
-       `-`(     )-'             `)    )
-         (o  o  )                `)`-'
-        (      )                ,)
-        ( ()  )                 )
-         `---"\    ,    ,    ,/`
-               `--' `--' `--'
-                |  |   |   |
-                |  |   |   |
-                '  |   '   |
-"""
+# """
+# Produces simple Sankey Diagrams with matplotlib.
+# @author: Anneya Golob & marcomanz & pierre-sassoulas & jorwoods
+#                       .-.
+#                  .--.(   ).--.
+#       <-.  .-.-.(.->          )_  .--.
+#        `-`(     )-'             `)    )
+#          (o  o  )                `)`-'
+#         (      )                ,)
+#         ( ()  )                 )
+#          `---"\    ,    ,    ,/`
+#                `--' `--' `--'
+#                 |  |   |   |
+#                 |  |   |   |
+#                 '  |   '   |
+# """
 
 from collections import defaultdict
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -56,8 +53,7 @@ def check_data_matches_labels(labels, data, side):
 
 
 def sankey(left, right, leftWeight=None, rightWeight=None, colorDict=None,
-           leftLabels=None, rightLabels=None, aspect=4, rightColor=False,
-           fontsize=14, figureName=None, closePlot=False):
+           leftLabels=None, rightLabels=None, aspect=4, rightColor=False, ax=None):
     '''
     Make Sankey Diagram showing flow from left-->right
 
@@ -94,10 +90,6 @@ def sankey(left, right, leftWeight=None, rightWeight=None, colorDict=None,
 
     if len(rightWeight) == 0:
         rightWeight = leftWeight
-
-    plt.figure()
-    plt.rc('text', usetex=False)
-    plt.rc('font', family='serif')
 
     # Create Dataframe
     if isinstance(left, pd.Series):
@@ -183,34 +175,34 @@ def sankey(left, right, leftWeight=None, rightWeight=None, colorDict=None,
 
     # Draw vertical bars on left and right of each  label's section & print label
     for leftLabel in leftLabels:
-        plt.fill_between(
+        ax.fill_between(
             [-0.02 * xMax, 0],
             2 * [leftWidths[leftLabel]['bottom']],
             2 * [leftWidths[leftLabel]['bottom'] + leftWidths[leftLabel]['left']],
             color=colorDict[leftLabel],
             alpha=0.99
         )
-        plt.text(
+        ax.text(
             -0.05 * xMax,
             leftWidths[leftLabel]['bottom'] + 0.5 * leftWidths[leftLabel]['left'],
             leftLabel,
-            {'ha': 'right', 'va': 'center'},
-            fontsize=fontsize
+            {'ha': 'right', 'va': 'center'}
         )
     for rightLabel in rightLabels:
-        plt.fill_between(
+        ax.fill_between(
             [xMax, 1.02 * xMax], 2 * [rightWidths[rightLabel]['bottom']],
             2 * [rightWidths[rightLabel]['bottom'] + rightWidths[rightLabel]['right']],
             color=colorDict[rightLabel],
             alpha=0.99
         )
-        plt.text(
+        ax.text(
             1.05 * xMax,
             rightWidths[rightLabel]['bottom'] + 0.5 * rightWidths[rightLabel]['right'],
             rightLabel,
-            {'ha': 'left', 'va': 'center'},
-            fontsize=fontsize
+            {'ha': 'left', 'va': 'center'}
         )
+
+    ax.set_axis_off()
 
     # Plot strips
     for leftLabel in leftLabels:
@@ -231,13 +223,7 @@ def sankey(left, right, leftWeight=None, rightWeight=None, colorDict=None,
                 # Update bottom edges at each label so next strip starts at the right place
                 leftWidths[leftLabel]['bottom'] += ns_l[leftLabel][rightLabel]
                 rightWidths[rightLabel]['bottom'] += ns_r[leftLabel][rightLabel]
-                plt.fill_between(
+                ax.fill_between(
                     np.linspace(0, xMax, len(ys_d)), ys_d, ys_u, alpha=0.65,
                     color=colorDict[labelColor]
                 )
-    plt.gca().axis('off')
-    plt.gcf().set_size_inches(6, 6)
-    if figureName != None:
-        plt.savefig("{}.png".format(figureName), bbox_inches='tight', dpi=150)
-    if closePlot:
-        plt.close()
